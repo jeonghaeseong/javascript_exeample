@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+    <style>
+      .resizable {
+        background: white;
+        width: 100px;
+        height: 100px;
+        position: absolute;
+        top: 100px;
+        left: 100px;
+      }
+
+      .resizable .resizers {
+        width: 100%;
+        height: 100%;
+        border: 3px solid #4286f4;
+        box-sizing: border-box;
+      }
+
+      .resizable .resizers .resizer {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%; /*magic to turn square into circle*/
+        background: white;
+        border: 3px solid #4286f4;
+        position: absolute;
+      }
+
+      .resizable .resizers .resizer.top-left {
+        left: -5px;
+        top: -5px;
+        cursor: nwse-resize; /*resizer cursor*/
+      }
+      .resizable .resizers .resizer.top-right {
+        right: -5px;
+        top: -5px;
+        cursor: nesw-resize;
+      }
+      .resizable .resizers .resizer.bottom-left {
+        left: -5px;
+        bottom: -5px;
+        cursor: nesw-resize;
+      }
+      .resizable .resizers .resizer.bottom-right {
+        right: -5px;
+        bottom: -5px;
+        cursor: nwse-resize;
+      }
+
+      .container {
+        width: 940px;
+        margin: 0px auto;
+        padding: 20px;
+        border: 1px solid #bcbcbc;
+      }
+
+      .header {
+        padding: 20px;
+        margin-bottom: 20px;
+        border: 1px solid #bcbcbc;
+      }
+
+      .content {
+        width: 580px;
+        padding: 20px;
+        margin-bottom: 20px;
+        float: right;
+        border: 1px solid #bcbcbc;
+      }
+
+      .sidebar {
+        position: relative;
+        width: 260px;
+        padding: 20px;
+        margin-bottom: 20px;
+        float: left;
+        border: 1px solid #bcbcbc;
+      }
+
+      .w-sidebar {
+        width: 5px;
+        height: 100%;
+        border: 1px solid #bcbcbc;
+        position: absolute;
+        display: inline-block;
+        top: 0px;
+        right: 0px;
+      }
+
+      .footer {
+        clear: both;
+        padding: 20px;
+        border: 1px solid #bcbcbc;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="resizable">
+      <div class="resizers">
+        <div class="resizer top-left"></div>
+        <div class="resizer top-right"></div>
+        <div class="resizer bottom-left"></div>
+        <div class="resizer bottom-right"></div>
+        <img
+          src="https://file.mk.co.kr/meet/neds/2015/09/image_readtop_2015_891935_14423221542127136.jpg"
+          alt="test"
+          style="width:100%; height:100%;"
+        />
+      </div>
+    </div>
+
+    <script>
+      dragElement(document.querySelector(".resizable"));
+      makeResizableDiv(".resizable");
+
+      function dragElement(elmnt) {
+        var pos1 = 0,
+          pos2 = 0,
+          pos3 = 0,
+          pos4 = 0;
+
+        if (document.getElementById(elmnt.id + "header")) {
+          document.getElementById(
+            elmnt.id + "header"
+          ).onmousedown = dragMouseDown;
+        } else {
+          elmnt.onmousedown = dragMouseDown;
+        }
+
+        function dragMouseDown(e) {
+          //   console.log(
+          //     "dragMouseDown target : ",
+          //     e.target == document.querySelector(".resizable img")
+          //   );
+
+          if (e.target != document.querySelector(".resizable img")) return;
+
+          e = e || window.event;
+          e.preventDefault();
+          // get the mouse cursor position at startup:
+          pos3 = e.clientX;
+          pos4 = e.clientY;
+          document.onmouseup = closeDragElement;
+          // call a function whenever the cursor moves:
+          document.onmousemove = elementDrag;
+        }
+
+        function elementDrag(e) {
+          e = e || window.event;
+          e.preventDefault();
+          // calculate the new cursor position:
+          pos1 = pos3 - e.clientX;
+          pos2 = pos4 - e.clientY;
+          pos3 = e.clientX;
+          pos4 = e.clientY;
+          // set the element's new position:
+          elmnt.style.top = elmnt.offsetTop - pos2 + "px";
+          elmnt.style.left = elmnt.offsetLeft - pos1 + "px";
+        }
+
+        function closeDragElement() {
+          // stop moving when mouse button is released:
+          document.onmouseup = null;
+          document.onmousemove = null;
+        }
+      }
+
+      // https://www.w3schools.com/howto/howto_js_draggable.asp 요소 이동 참조
+
+      function makeResizableDiv(div) {
+        const element = document.querySelector(div);
+        const resizers = document.querySelectorAll(div + " .resizer");
+        const minimum_size = 20;
+
+        let original_width = 0;
+        let original_height = 0;
+        let original_x = 0;
+        let original_y = 0;
+        let original_mouse_x = 0;
+        let original_mouse_y = 0;
+
+        for (let i = 0; i < resizers.length; i++) {
+          const currentResizer = resizers[i];
+          currentResizer.addEventListener("mousedown", function(e) {
+            e.preventDefault();
+
+            original_width = parseFloat(
+              getComputedStyle(element, null)
+                .getPropertyValue("width")
+                .replace("px", "")
+            );
+            original_height = parseFloat(
+              getComputedStyle(element, null)
+                .getPropertyValue("height")
+                .replace("px", "")
+            );
+
+            original_x = element.getBoundingClientRect().left;
+            original_y = element.getBoundingClientRect().top;
+
+            original_mouse_x = e.pageX;
+            original_mouse_y = e.pageY;
+
+            window.addEventListener("mousemove", resize);
+            window.addEventListener("mouseup", stopResize);
+          });
+
+          function resize(e) {
+            console.log(e);
+            if (currentResizer.classList.contains("bottom-right")) {
+              const width = original_width + (e.pageX - original_mouse_x);
+              const height = original_height + (e.pageY - original_mouse_y);
+              if (width > minimum_size) {
+                element.style.width = width + "px";
+              }
+              if (height > minimum_size) {
+                element.style.height = height + "px";
+              }
+            } else if (currentResizer.classList.contains("bottom-left")) {
+              const width = original_width - (e.pageX - original_mouse_x);
+              const height = original_height + (e.pageY - original_mouse_y);
+
+              if (height > minimum_size) {
+                element.style.height = height + "px";
+              }
+              if (width > minimum_size) {
+                element.style.width = width + "px";
+                element.style.left =
+                  original_x + (e.pageX - original_mouse_x) + "px";
+              }
+            } else if (currentResizer.classList.contains("top-right")) {
+              const width = original_width + (e.pageX - original_mouse_x);
+              const height = original_height - (e.pageY - original_mouse_y);
+              if (width > minimum_size) {
+                element.style.width = width + "px";
+              }
+              if (height > minimum_size) {
+                element.style.height = height + "px";
+                element.style.top =
+                  original_y + (e.pageY - original_mouse_y) + "px";
+              }
+            } else {
+              const width = original_width - (e.pageX - original_mouse_x);
+              const height = original_height - (e.pageY - original_mouse_y);
+              if (width > minimum_size) {
+                element.style.width = width + "px";
+                element.style.left =
+                  original_x + (e.pageX - original_mouse_x) + "px";
+              }
+              if (height > minimum_size) {
+                element.style.height = height + "px";
+                element.style.top =
+                  original_y + (e.pageY - original_mouse_y) + "px";
+              }
+            }
+          }
+
+          function stopResize() {
+            window.removeEventListener("mousemove", resize);
+          }
+        }
+      }
+    </script>
+  </body>
+</html>
